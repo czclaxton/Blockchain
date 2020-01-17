@@ -134,25 +134,49 @@ blockchain = Blockchain()
 def mine():
 
     data = request.get_json()
+    required = ['proof', 'id']
+    if not all(k in data for k in required):
+        response = {'message': 'missing values'}
+        return jsonify(response), 400
 
-    proof = data['proof']
-    previous_hash = blockchain.hash(blockchain.last_block)
+    last_block = blockchain.last_block
+    last_block_string = json.dumps(last_block, sort_keys=True)
+
+    if blockchain.valid_proof(last_block_string, data['proof']):
+        previous_hash = blockchain.hash(blockchain.last_block)
+        block = blockchain.new_block(data['proof'], previous_hash)
+
+        response = {
+            'message': 'new block forged',
+            'new_block' = block
+        }
+
+    else:
+
+        response = {
+            'message' = 'proof is invalid or already submitted'
+        }
+
+    return jsonify(response), 200
+
+    # proof = data['proof']
+    # previous_hash = blockchain.hash(blockchain.last_block)
 
     # Run the proof of work algorithm to get the next proof
 
     # Forge the new Block by adding it to the chain with the proof
-    success = blockchain.valid_proof(json.dumps(
-        blockchain.last_block, sort_keys=True), str(proof))
-    if success:
-        block = blockchain.new_block(proof, previous_hash)
-    else:
-        block = False
+    # success = blockchain.valid_proof(json.dumps(
+    #     blockchain.last_block, sort_keys=True), str(proof))
+    # if success:
+    #     block = blockchain.new_block(proof, previous_hash)
+    # else:
+    #     block = False
 
-    response = {
-        'new_block': block
-    }
+    # response = {
+    #     'new_block': block
+    # }
 
-    return jsonify(response), 200
+    # return jsonify(response), 200
 
 
 @app.route('/chain', methods=['GET'])
